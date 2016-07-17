@@ -29,6 +29,9 @@ class Settlement:
 	def get_distance (self,settlement):
 		return (math.sqrt(((self.xcd-settlement.xcd)**2)+((self.ycd-settlement.ycd)**2)))
 
+	def __repr__(self):
+		return str(self.sindex)+" "+str(self.SSI)+" "+str(self.total_supply)+" "+str(self.drug_demand)
+	#this is to print
 
 #x = Settlement(1,10,10,1,1,15,0.2)
 
@@ -54,6 +57,8 @@ class Graph:
 	def get_neighbors(self,settlement):
 		return self.nodes[settlement.sindex]
 
+	def __repr__(self):
+		return str(self.nodes)
 	
 
 	#def next_settlement(self,settlement):
@@ -97,9 +102,14 @@ class Greedy_dist:
 			if next_settlement.SSI > max_SSI:
 				for drug in range(len(next_settlement.drug_demand)):
 					forecast_time = self.current_time+next_time
+					print "for node " + str(next_settlement.sindex)
 					if self.current_time+next_time>len(next_settlement.drug_demand[drug]):
-						forecast_time = len(drug_demand[drug])
-					if sum(next_settlement.drug_demand[drug][:(forecast_time)])-next_settlement.total_supply[drug]>0 and self.vehicle.drug_load[drug]>0:
+						forecast_time = len(next_settlement.drug_demand[drug])
+					drug_required = sum(next_settlement.drug_demand[drug][:forecast_time])-next_settlement.total_supply[drug]
+					print " drug required " + str(drug_required) + " forecast_time " + str(forecast_time)
+					print " array considered " + str(next_settlement.drug_demand[drug][:forecast_time])
+					if drug_required >0 and self.vehicle.drug_load[drug]>0:
+						print " I came here"
 						travel_time = next_time
 						selected_next_settlement = next_settlement
 						max_SSI = next_settlement.SSI
@@ -110,30 +120,35 @@ class Greedy_dist:
 
 
 		else:
+			print "chosen one " + str(max_SSI_sindex)
 			self.current_time = self.current_time+travel_time
 			self.current_sindex = max_SSI_sindex
 			for drug in range(len(selected_next_settlement.drug_demand)):
 				if self.current_time<=len(selected_next_settlement.drug_demand[drug]):
 					drug_required = sum(selected_next_settlement.drug_demand[drug][:self.current_time])-selected_next_settlement.total_supply[drug]
 					if (self.vehicle.drug_load[drug]-drug_required)>=0:
-						next_settlement.total_supply[drug] += drug_required
+						selected_next_settlement.total_supply[drug] += drug_required
 						self.vehicle.drug_load[drug] -= drug_required
 					else:
-						next_settlement.total_supply[drug] += self.vehicle.drug_load[drug]
+						selected_next_settlement.total_supply[drug] += self.vehicle.drug_load[drug]
 						self.vehicle.drug_load[drug] = 0
 				else:
 					drug_required = sum(selected_next_settlement.drug_demand[drug][:-1])-selected_next_settlement.total_supply[drug]
 					if (self.vehicle.drug_load[drug]- drug_required)>=0:
 						# (-1 takes you to the last point in the length)
-						next_settlement.total_supply[drug] += drug_required
+						selected_next_settlement.total_supply[drug] += drug_required
 						self.vehicle.drug_load[drug] -= drug_required
 					else:
-						next_settlement.total_supply[drug] += self.vehicle.drug_load[drug]
+						selected_next_settlement.total_supply[drug] += self.vehicle.drug_load[drug]
 						self.vehicle.drug_load[drug] = 0
-		print next_settlement.total_supply
+			if selected_next_settlement.SSI>0.1:
+				selected_next_settlement.SSI -= 0.1
+
+			print selected_next_settlement.total_supply
 		print (self.current_time)
 		print (self.current_sindex)
-		return max_SSI_sindex
+		print self.vehicle.drug_load
+		return self.settlements
 
 class Vehicle:
 
@@ -145,6 +160,7 @@ class Vehicle:
 
 buffalopharmadist=Greedy_dist()
 
+print buffalopharmadist.graph
 for i in range (10):
 	print buffalopharmadist.go_next()
 
