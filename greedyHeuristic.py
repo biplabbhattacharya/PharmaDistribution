@@ -4,7 +4,7 @@ import math
 
 speed_factor = 0.5
 dist_threshold =4
-drug_load = [200,200]
+drug_load = [60,60]
 number_of_drugs = 2
 
 class Settlement:
@@ -49,7 +49,7 @@ class Graph:
 				distance=settlements[i].get_distance(settlements[j])
 				#I have used math.ceil to round up the distance value
 				if distance<=dist_threshold:
-					time = int(math.ceil(distance*speed_factor))
+					time = int(math.ceil(distance*speed_factor)+1)
 					self.nodes[settlements[i].sindex].append((j,time))
 						#Here we are assigning the value of the tuple to the key
 						#two round brackets in the line above after append indicates a tuple.
@@ -115,8 +115,11 @@ class Greedy_dist:
 						max_SSI = next_settlement.SSI
 						max_SSI_sindex = next_settlement.sindex
 		if selected_next_settlement == 0:
+			global drug_load
+			print "going to depot drug load" + str(drug_load)
 			self.current_time += self.get_depot_time(self.settlements[self.current_sindex])
 			self.current_sindex = 0
+			self.vehicle.drug_load = drug_load[:]
 
 
 		else:
@@ -133,7 +136,7 @@ class Greedy_dist:
 						selected_next_settlement.total_supply[drug] += self.vehicle.drug_load[drug]
 						self.vehicle.drug_load[drug] = 0
 				else:
-					drug_required = sum(selected_next_settlement.drug_demand[drug][:-1])-selected_next_settlement.total_supply[drug]
+					drug_required = sum(selected_next_settlement.drug_demand[drug])-selected_next_settlement.total_supply[drug]
 					if (self.vehicle.drug_load[drug]- drug_required)>=0:
 						# (-1 takes you to the last point in the length)
 						selected_next_settlement.total_supply[drug] += drug_required
@@ -145,9 +148,9 @@ class Greedy_dist:
 				selected_next_settlement.SSI -= 0.1
 
 			print selected_next_settlement.total_supply
-		print (self.current_time)
-		print (self.current_sindex)
-		print self.vehicle.drug_load
+		print "Time is " + str(self.current_time)
+		print "currently at " + str(self.current_sindex)
+		print "vehicle drug load" + str(self.vehicle.drug_load)
 		return self.settlements
 
 class Vehicle:
@@ -155,13 +158,14 @@ class Vehicle:
 #add capacity to the below line later
 	def __init__ (self,vindex):
 		self.vindex = vindex
-		self.drug_load = drug_load
+		self.drug_load = drug_load[:]
 
 
 buffalopharmadist=Greedy_dist()
 
 print buffalopharmadist.graph
 for i in range (10):
+	print "-----------------------------------------------------------"
 	print buffalopharmadist.go_next()
 
 
